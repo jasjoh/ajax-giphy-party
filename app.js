@@ -1,20 +1,42 @@
-console.log("Let's get this party started!");
-const sampleUrl = 'http://api.giphy.com/v1/gifs/search?q=hilarious&api_key=MhAodEJIJxQMxW9XqxKjyXfNYdLoOIym';
+"use strict";
 
-async function getGiphy() {
-  let response = await axios.get(sampleUrl);
-  console.log("raw giphy API response:", response);
-  let giphyUrl = response.data.data[0].images.original.url;
-  console.log("extracted URL:", giphyUrl);
-  console.log("going to create this:", `<img src='${giphyUrl}'>`);
-  $(".giphy-container").append(
-    $(`<img src='${giphyUrl}'>`)
-    )
+const API_URL = 'http://api.giphy.com/v1/gifs/search';
+const API_KEY = 'MhAodEJIJxQMxW9XqxKjyXfNYdLoOIym';
+
+/** gets a giphy image matching the search string */
+async function getGiphy(searchString) {
+  const response = await axios.get(
+    API_URL,
+    {
+      params: {
+        q: searchString,
+        api_key: API_KEY
+      }
+    }
+  );
+  const randomPicNumber = Math.floor(Math.random() * (response.data.data.length - 1));
+  const giphyUrl = response.data.data[randomPicNumber].images.original.url;
+  addImage(giphyUrl);
 }
 
-function listenForClick(evt) {
+/** handle search clicks and calls the getGiphy function */
+async function searchGiphy(evt) {
   evt.preventDefault();
-  getGiphy();
+  const imageUrl = await getGiphy($("input").val());
 }
 
-$("button").on("click", listenForClick);
+/** adds image to our giphy-container */
+function addImage(url) {
+  $(".giphy-container").append(
+    $(`<img src='${url}'>`)
+  );
+}
+
+/** handles remove image clicks and empties the image container */
+function clearImages(evt) {
+  evt.preventDefault();
+  $(".giphy-container").empty();
+}
+
+$(".search-button").on("click", searchGiphy);
+$(".remove-button").on("click", clearImages);
